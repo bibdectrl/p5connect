@@ -19,6 +19,7 @@ function Board(){
     }
   }
   this.drop = function(colour, column){
+    if (column < 0 || column > 6) return false;	  
     if (this.grid[column][0] != EMPTY) return false;
     this.grid[column][0] = colour;
     return true;
