@@ -114,24 +114,70 @@ function Board(){
 
 function Ai(board){
   this.board = board;
-  this.move = function(){
-    /*var b = [];
-    for (var x = 0; x < 7 x++){
-      b[x] = [];
+  this.score = function(grid){
+    for (var x = 0; x < 7; x++){
       for (var y = 0; y < 6; y++){
-        b[x][y] = this.board.grid[x][y];
+        if (grid[x][y] != EMPTY){
+          if (x < 4){
+            if (grid[x][y] == grid[x+1][y] && grid[x+1][y] == grid[x+2][y] && grid[x+2][y] == grid[x+3][y]) {
+               return (grid[x][y] == RED) ? -1000 : 1000;
+	    }
+	  }
+	  if (y < 3){
+            if (grid[x][y] == grid[x][y+1] && grid[x][y+1] == grid[x][y+2] && grid[x][y+2] == grid[x][y+3]) {
+                return (grid[x][y] == RED) ? -1000 : 1000;
+	    }
+	  }
+	  if (y < 3 && x < 4){
+            if (grid[x][y] == grid[x+1][y+1] && grid[x+1][y+1] == grid[x+2][y+2] && grid[x+2][y+2] == grid[x+3][y+3]) {
+                return (grid[x][y] == RED) ? -1000 : 1000;
+	    }
+	  }
+
+	  if (x < 4 && y > 2){
+            if (grid[x][y] == grid[x+1][y-1] && grid[x+1][y-1] == grid[x+2][y-2] && grid[x+2][y-2] == grid[x+3][y-3]){
+                return (grid[x][y] == RED) ? -1000 : 1000;
+	    }
+	  } 
+	}
       }
-    }*/
-    var m = Math.floor(Math.random() * 7);
-    while (this.board.grid[m][0] != EMPTY){
-       m = Math.floor(Math.random() * 7);
     }
-    this.board.grid[m][0] = BLACK;
+    return 0;
   };
-  this.score = function(){
-
+  this.findBottom = function(grid, col){
+    for (var y = 5; y > 0; y--){
+      if (grid[y][col] == EMPTY){
+        return y;
+      }
+    }
+    return undefined;
   };
-
+  this.move = function(){
+    var scores = {0 : undefined, 1 : undefined, 2 : undefined, 3 : undefined, 4 : undefined, 5 : undefined, 6 : undefined};	  
+    for (var col = 0; col < 7; col++){
+     var bot = this.findBottom(this.board.grid, col);	    
+     if (bot != undefined){	    
+       var b = [];
+       for (var x = 0; x < 7; x++){
+          b[x] = [];
+          for (var y = 0; y < 6; y++){
+            b[x][y] = this.board.grid[x][y];
+          }
+          b[col][y] = BLACK;
+          scores[y] = this.score(b);
+       }
+     }
+   }
+   var maxScoreCol = 0;
+   var maxScore = scores[maxScoreCol];
+   for (var col = 0; col < 7; col++){
+     if (scores[col] > maxScore){
+       maxScoreCol = col;
+       maxScore = scores[col]
+     }
+   }
+  this.board.drop(maxScoreCol, BLACK);
+  };
 }
 
 function reset(){
@@ -143,7 +189,8 @@ function reset(){
 }
 
 function setup(){
-  turn = Math.random() < 0.5 ? RED : BLACK;
+  //turn = Math.random() < 0.5 ? RED : BLACK;
+  turn = BLACK;
   mouseDown = false;
   canvas = createCanvas(800, 800).parent("canvasHere");
   board = new Board();
@@ -181,7 +228,8 @@ function draw(){
       }
     }
     else {
-      ai.move();
+      //console.log(ai.move());
+      ai.move();       
       while(board.applyGravity());
       turn = RED;
     }  
