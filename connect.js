@@ -8,7 +8,9 @@ var turn;
 var mouseDown;
 var resetButton;
 var gameOver;
+var tieGame;
 var winner; 
+var ai;
 
 function Board(){
   this.grid = [];
@@ -24,6 +26,16 @@ function Board(){
     this.grid[column][0] = colour;
     return true;
   };
+  this.checkTie = function(){
+    for (var x = 0; x < 7; x++){
+      if (this.grid[x][0] == EMPTY){
+        return false;
+      }
+    }
+    gameOver = true;
+    tieGame = true;
+    return true;
+  }
   this.applyGravity = function(){
     for (var x = 0; x < 7; x++){
       for (var y = 0; y < 5; y++){
@@ -100,9 +112,33 @@ function Board(){
   }
 }
 
+function Ai(board){
+  this.board = board;
+  this.move = function(){
+    /*var b = [];
+    for (var x = 0; x < 7 x++){
+      b[x] = [];
+      for (var y = 0; y < 6; y++){
+        b[x][y] = this.board.grid[x][y];
+      }
+    }*/
+    var m = Math.floor(Math.random() * 7);
+    while (this.board.grid[m][0] != EMPTY){
+       m = Math.floor(Math.random() * 7);
+    }
+    this.board.grid[m][0] = BLACK;
+  };
+  this.score = function(){
+
+  };
+
+}
+
 function reset(){
   board = new Board();
+  ai = new Ai(board);
   gameOver = false;
+  tieGame = false;
   winner = undefined;
 }
 
@@ -111,41 +147,58 @@ function setup(){
   mouseDown = false;
   canvas = createCanvas(800, 800).parent("canvasHere");
   board = new Board();
+  ai = new Ai(board);
   resetButton = createButton("reset").parent("reset").mousePressed(reset);
   gameOver = false;
+  tieGame = false;
   winner = undefined;
 }
 
 function draw(){
   clear();	
   board.draw();
-  if (! gameOver){  
-    if (mouseIsPressed && mouseX > 0 && mouseX < 750 && mouseY < 700 && mouseY > 100 && ! mouseDown){
-      mouseDown = true;
-      var column = Math.floor((mouseX - 50) / 100);
-      if (board.drop(turn, column)){
-        turn = (turn == RED) ? BLACK : RED;
+  if (! gameOver){
+    if (turn == RED){  
+      if (mouseIsPressed && mouseX > 0 && mouseX < 750 && mouseY < 700 && mouseY > 100 && ! mouseDown){
+        mouseDown = true;
+        var column = Math.floor((mouseX - 50) / 100);
+        if (board.drop(turn, column)){
+          board.applyGravity();		
+          turn = BLACK;
+        }
+      }
+      else if (! mouseIsPressed){
+        mouseDown = false;
+      }
+      if (mouseX > 100 && mouseX < 750){
+        var column = Math.floor((mouseX - 50) / 100); 
+        if (turn == RED){
+          fill(255, 0, 0);
+        } else {
+          fill(0);   
+        }
+        ellipse(100 + column*100, 50, 90, 90);
       }
     }
-    else if (! mouseIsPressed){
-      mouseDown = false;
-    }
-    if (mouseX > 100 && mouseX < 750){
-      var column = Math.floor((mouseX - 50) / 100); 
-      if (turn == RED){
-        fill(255, 0, 0);
-      } else {
-        fill(0);   
-      }
-      ellipse(100 + column*100, 50, 90, 90);
+    else {
+      ai.move();
+      board.applyGravity();
+      turn = RED;
     }  
     if (! board.applyGravity() ){ // false means nothing moved in the last turn
       board.checkWin();
+      board.checkTie();
     }
   } else {
-    fill(0);
-    textSize(20);
-    text(`Winner is ${winner == RED ? "RED" : "BLACK" }`, 100, 50);
+   if (tieGame){
+      fill(0);
+      textSize(20);
+      text("Tie game", 100, 50);
+    } else {
+      fill(0);
+      textSize(20);
+      text(`Winner is ${winner == RED ? "RED" : "BLACK" }`, 100, 50);
+    }
   } 
 }
 
