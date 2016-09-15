@@ -163,7 +163,7 @@ function draw(){
         mouseDown = true;
         var column = Math.floor((mouseX - 50) / 100);
         if (board.drop(turn, column)){
-          board.applyGravity();		
+          while(board.applyGravity());		
           turn = BLACK;
         }
       }
@@ -182,7 +182,7 @@ function draw(){
     }
     else {
       ai.move();
-      board.applyGravity();
+      while(board.applyGravity());
       turn = RED;
     }  
     if (! board.applyGravity() ){ // false means nothing moved in the last turn
