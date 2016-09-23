@@ -10,6 +10,7 @@ var resetButton;
 var gameOver;
 var tieGame;
 var winner; 
+var player;
 var ai;
 
 function Board(){
@@ -111,6 +112,30 @@ function Board(){
     }
   }
 }
+function Player(){
+  this.move = function(){
+    if (mouseIsPressed && mouseX > 0 && mouseX < 750 && mouseY < 700 && mouseY > 100 && ! mouseDown){
+        mouseDown = true;
+        var column = Math.floor((mouseX - 50) / 100);
+        if (board.drop(turn, column)){
+          while(board.applyGravity());		
+          turn = BLACK;
+        }
+    }
+      else if (! mouseIsPressed){
+        mouseDown = false;
+      }
+      if (mouseX > 100 && mouseX < 750){
+        var column = Math.floor((mouseX - 50) / 100); 
+        if (turn == RED){
+          fill(255, 0, 0);
+        } else {
+          fill(0);   
+        }
+        ellipse(100 + column*100, 50, 90, 90);
+      }
+    };
+}
 
 function Ai(board){
   this.board = board;
@@ -145,11 +170,11 @@ function Ai(board){
     return 0;
   };
   this.findBottom = function(grid, col){
-    for (var y = 5; y > 0; y--){
-      if (grid[y][col] == EMPTY){
-        return y;
-      }
-    }
+    for (var y = 5; y >= 0; y--){
+	if (grid[y][col] == EMPTY){
+          return y;
+	}
+				}
     return undefined;
   };
   this.move = function(){
@@ -157,27 +182,14 @@ function Ai(board){
     for (var col = 0; col < 7; col++){
      var bot = this.findBottom(this.board.grid, col);	    
      if (bot != undefined){	    
-       var b = [];
-       for (var x = 0; x < 7; x++){
-          b[x] = [];
-          for (var y = 0; y < 6; y++){
-            b[x][y] = this.board.grid[x][y];
-          }
-          b[col][y] = BLACK;
-          scores[y] = this.score(b);
-       }
+      console.log(bot);
      }
-   }
-   var maxScoreCol = 0;
-   var maxScore = scores[maxScoreCol];
-   for (var col = 0; col < 7; col++){
-     if (scores[col] > maxScore){
-       maxScoreCol = col;
-       maxScore = scores[col]
-     }
-   }
-  this.board.drop(maxScoreCol, BLACK);
-  };
+    }
+   var maxScoreCol = 0;  
+   board.drop(BLACK, maxScoreCol);
+   while (board.applyGravity());
+   turn = RED;
+  }; 
 }
 
 function reset(){
@@ -190,10 +202,11 @@ function reset(){
 
 function setup(){
   //turn = Math.random() < 0.5 ? RED : BLACK;
-  turn = BLACK;
+  turn = RED;
   mouseDown = false;
   canvas = createCanvas(800, 800).parent("canvasHere");
   board = new Board();
+  player = new Player();
   ai = new Ai(board);
   resetButton = createButton("reset").parent("reset").mousePressed(reset);
   gameOver = false;
@@ -206,37 +219,16 @@ function draw(){
   board.draw();
   if (! gameOver){
     if (turn == RED){  
-      if (mouseIsPressed && mouseX > 0 && mouseX < 750 && mouseY < 700 && mouseY > 100 && ! mouseDown){
-        mouseDown = true;
-        var column = Math.floor((mouseX - 50) / 100);
-        if (board.drop(turn, column)){
-          while(board.applyGravity());		
-          turn = BLACK;
-        }
-      }
-      else if (! mouseIsPressed){
-        mouseDown = false;
-      }
-      if (mouseX > 100 && mouseX < 750){
-        var column = Math.floor((mouseX - 50) / 100); 
-        if (turn == RED){
-          fill(255, 0, 0);
-        } else {
-          fill(0);   
-        }
-        ellipse(100 + column*100, 50, 90, 90);
-      }
+         player.move();
+	 while(board.applyGravity());
     }
-    else {
-      //console.log(ai.move());
+    else {	 
       ai.move();       
       while(board.applyGravity());
       turn = RED;
     }  
-    if (! board.applyGravity() ){ // false means nothing moved in the last turn
-      board.checkWin();
-      board.checkTie();
-    }
+    board.checkWin();
+    board.checkTie();
   } else {
    if (tieGame){
       fill(0);
